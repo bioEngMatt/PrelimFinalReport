@@ -1,0 +1,539 @@
+\documentclass{article}
+\usepackage[a4paper, total={170mm,257mm},margin=25mm]{geometry}
+
+% Packages
+
+\usepackage[utf8]{inputenc}
+\usepackage{blindtext}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amsmath }
+\usepackage{siunitx}
+\usepackage[acronym,toc,numberline]{glossaries}              % use glossaries-package 
+\usepackage{xcolor}
+\usepackage[parfill]{parskip}
+\usepackage{minted}
+
+
+% For Code formatting
+
+\usepackage{xcolor} % to access the named colour LightGray
+\definecolor{LightGray}{gray}{0.9}
+\definecolor{LightBlue}{rgb}{0.78, 0.9, 1.}
+\usemintedstyle{ansimagenta}
+
+% Package adjustment
+
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+
+
+\newcommand{\rf}[1]{\textcolor{red}{#1}}
+\newcommand{\sie}[1]{\text{\gls{symb:cameraMtx:#1}}}   %Symbol in equation
+\newcommand{\sba}[1]{\gls{symb:cameraMtx:#1}}          % Symbol in text
+
+
+\newcommand{\symbsec}[1]{
+    \renewcommand{\sie}[1]{\text{\gls{symb:#1:##1}}}
+    \renewcommand{\sba}[1]{\gls{symb:#1:##1}}
+}
+
+
+
+\newcommand{\mlCode}[1]{
+    \inputminted
+    [
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    bgcolor=LightBlue,
+    fontsize=\footnotesize,
+    linenos
+    ]
+    {matlab}{matlabFiles/#1}
+}
+
+\newcommand{\pyCode}[1]{
+    \inputminted
+    [
+    frame=lines,
+    framesep=2mm,
+    baselinestretch=1.2,
+    bgcolor=LightGray,
+    fontsize=\footnotesize,
+    linenos
+    ]
+    {python}{PythonFiles/#1}
+}
+
+
+\input{variables.tex}
+\input{toc.tex}
+
+\input{abbr.tex}
+% \makeglossaries
+\makenoidxglossaries
+
+
+\title{Depth_Vision_Planning and Mapping}
+\author{Matthieu Christofides}
+\date{October 2021}
+
+
+% Document
+
+\begin{document}
+
+% \maketitle
+\newpage
+
+\tableofcontents
+
+\section{Calibration}
+
+Binary depth vision is calculated by comparing two images which are placed a specified distance (\sba{base}) from eachother.  The distance of each object is calculated by finding the difference between points in each camera.  This comparison can however not be made with raw camera feeds due to the difference in manufacturing and digitizing of each camera sensor.  To correct the distortion, difference in focal lengths, rotation and translation of the camera sensors, the cameras require calibration.\\
+
+Each camera could have different distortions, focal lengths and world positions.  The parameters of each camera and the cameras in relation to each other can be found by determining the intrinsic (\sba{K}) and extrinsic parameters of each camera.
+
+
+
+\  \\
+
+\subsection{Camera Model} \label{sec:cameraMtx}
+\symbsec{cameraMtx}
+
+A camera is modeled after the Pin hole camera model (\sba{P}) proposed by \rf{ref}.  The camera model (equation \ref{eq:Mtrx:Comb}) consists of the intrinsic camera matrix (\sba{K}) and the extrinsic camera matrix.  \sba{P} represents the coordinates in the image.
+
+\begin{align}
+\begin{split}\label{eq:Mtrx:Comb}
+    \sie{P} &= \overbrace{\sie{K}}^{\text {Intrinsic Matrix }} \times \overbrace{[\sie{R} \mid \sie{bt}]}^{\text {Extrinsic Matrix }} \\
+    \text{Where,}& \\
+    \sie{P} &= \left[\begin{array}{l}
+x \\
+y \\
+1
+\end{array}\right]
+\end{split}
+\end{align}
+
+\subsubsection{Intrinsic camera Matrix (\sba{K})}
+
+The intrinsic camera matrix (equation \ref{eq:Mtrx:Int})(\href{robots.ox.ac.uk/~vgg/hzbook/}{Hartley and Zisserman}) defines the unique characteristics of each camera.  The matrix consists of the focal lengths, axis skew, and principle-point offsets.
+
+\begin{align}
+    \sie{K} &= \left[\begin{array}{ccc}
+    \sie{f} & \sie{s} & \sie{o_x} \\
+    0 & \sie{eta}\sie{f} & \sie{o_y} \\
+    0 & 0 & 1
+    \end{array}\right] \label{eq:Mtrx:Int}
+\end{align}
+
+The axis skew (\sba{s}) represents the angle between the x-axis and y-axis of the image.  In most current digital cameras axis skew is either zero or negligible, however during the digitisation of the analogue images, a non-zero axis skew can be introduced when the pixels are not vertically synchronized during frame capturing process. \href{http://epixea.com/research/multi-view-coding-thesisch2.html#x13-320002.2.1}{\rf{Source}}.
+
+The optical centre of the sensor to the lens may not be in the centre of the image.  The principle-offset of the optical centre from the centre of the image is represented in the x-axis by \sba{o_x} and in the y-axis by \sba{o_y}.
+
+The focal length (\sba{f}) is measured in pixels and represents the focal length of the camera, which is the distance between the image plane and the optical centre \rf{Include an image}.  It does however happen that the pixels themselves could be skewed, in which case the focal length in the x and y-axis would differ.  The angle of this pixel skew is represented by \sba{eta} and is initially assumed to be \sba{eta}=1.  The focal length can be converted from pixels to mm by equation \ref{eq:Mtrx:fcl}.
+
+\begin{align}
+    \sie{F} &= \sie{f}\frac{\sie{W_x}}{\sie{w_x}} \label{eq:Mtrx:fcl}
+\end{align}
+
+\subsubsection{Radial Distortion}
+
+The internal matrix of a camera is however not the only parameters required to \rf{rectify} an image as there are non-linear distortions also present from the parameters of the lenses used.  There are different causes of distortion with different results, eg. radial distortion caused by the lens bending to provide the desired \acrlong{fov} (\acrshort{fov}), planar (tangential) distortion which is an effect of lens misalignment to the camera sensor and distortions caused by imperfections in the lens.
+
+This project will only be discussing Radial Distortion effects and corrections of the non-linear distortions.  \Gls{RadDist} is when a straight line in the world is captured as a curved line in the image.  These can most commonly be found in wide angle cameras lenses, which cause barrel distortion \rf{Add image} as the image magnification decreases from the principle point of the camera.  Pincushion distortion (\rf{add image}) is the opposite of barrel distortion, and is caused by telephoto lenses mostly.
+
+Radial distortion is dependent on the location of the pixel from the principle point of the image.  This non-linear distortion can be estimated by finding the radial distortion coefficient (\sba{kr}) in equation \ref{eq:Mtrx:rad}.
+
+\begin{align}
+    \begin{split}
+        x_c &= x(1+\sie{kr}r^2)\\
+        y_c &= y(1+\sie{kr}r^2) \label{eq:Mtrx:rad}
+    \end{split}
+\end{align}
+
+\rf{How to find $k_r$}
+
+\subsubsection{Tangential distortion}
+
+\rf{New sensors may need tangential distortion correction}
+
+
+\subsubsection{Extrinsic camera Matrix}
+
+The extrinsic camera matrix relates 
+
+\begin{align}
+[\sie{R} \mid \sie{bt}] &=\left[\begin{array}{ccc|c}
+r_{11} & r_{12} & r_{13} & t_{1} \\
+r_{21} & r_{22} & r_{23} & t_{2} \\
+r_{31} & r_{32} & r_{33} & t_{3}
+\end{array}\right] \label{eq:Mtrx:Ext}
+\end{align}
+
+
+Equation \ref{eq:Mtrx:Comb} can thus be expanded to equation \ref{eq:Mtrx:CombFull}.
+
+\begin{align}
+\left[\begin{array}{l}
+x \\
+y \\
+1
+\end{array}\right]=\left[\begin{array}{ccc}
+    \sie{f} & \sie{s} & \sie{o_x} \\
+    0 & \sie{eta}\sie{f} & \sie{o_y} \\
+    0 & 0 & 1
+    \end{array}\right]\left[\begin{array}{cccc}
+r_{11} & r_{12} & r_{13} & t_{1} \\
+r_{21} & r_{22} & r_{23} & t_{2} \\
+r_{31} & r_{32} & r_{33} & t_{3}
+\end{array}\right]\left[\begin{array}{c}
+X \\
+Y \\
+Z \\
+1
+\end{array}\right] \label{eq:Mtrx:CombFull}
+\end{align}
+
+
+Intrinsic camera pin hole model intrinsic matrix
+
+\textbf{Links Tsai Calibration:}
+\begin{itemize}
+    \item \href{https://en.wikipedia.org/wiki/Camera_resectioning#Tsai.27s_Algorithm}{Wikipedia Tsai Basic}
+    \item \href{https://en.wikipedia.org/wiki/Pinhole_camera_model}{Pinhole Camera Model (Wiki)}
+    \item \href{https://github.com/bailus/tsai-calibration}{Github Impl 1}
+    \item \href{https://github.com/siddharthKatageri/tsai-camera-calibration}{Github impl 2}
+\end{itemize}
+\textbf{Links Camera Models:}
+\begin{itemize}
+    \item \href{https://ksimek.github.io/2013/08/13/intrinsic/}{Pinhole model}
+    \item \href{https://ksimek.github.io/perspective_camera_toy.html}{Pinhole camera Toy}
+\end{itemize}
+
+\subsection{Tsai vs Zhang}
+
+\textbf{\textit{Algos:}}
+\begin{itemize}
+    \item HSV Filtering
+    \item Otsu Threshold - \href{https://muthu.co/otsus-method-for-image-thresholding-explained-and-implemented/}{Math}
+    \item Median Blur
+    \item Suzuki contouring - \href{https://theailearner.com/tag/suzuki-contour-algorithm-opencv/}{Math}
+    \item Harris Corner detection - \href{https://muthu.co/harris-corner-detector-implementation-in-python/}{Math}
+\end{itemize}
+
+\acrlong{gcd}
+
+
+% \glsaddall[types={symbolslist}]
+
+
+
+\textbf{Variables explained}
+% \end{equation}
+
+
+\subsection{Algorithms}
+
+% Best Explenation
+% https://muthu.co/otsus-method-for-image-thresholding-explained-and-implemented/
+\subsubsection{Otsu Thresholding} \label{sec:otsu}
+\symbsec{otsu}
+
+\rf{Different thresholding methods}
+
+Thresholding is the process of separating desired pixels or information from the rest of the image.  Otsu's variance-based thresholding iterates through a set of thresholding values to minimise the spread of background and foreground pixels in a gray scale image.  The weighted variance between the background and foreground pixels are represented by \sba{w_bg} and \sba{w_fg} respectively as functions of the threshold (\sba{t}) in equation \ref{algo:otsu:main}.
+
+\begin{align}
+    \sie{sig}^{2}(\sie{t}) &= \sie{w_bg}(\sie{t}) \sie{sig_bg}^{2}(\sie{t})+\sie{w_fg}(\sie{t}) \sie{sig_fg}^{2}(\sie{t}) \label{algo:otsu:main}
+\end{align}
+
+The weights used to calculate the variance can by determined by equation \ref{algo:otsu:wts}.  \sba{Pall} represents the total number of pixels in the image.  \sba{Pbg} and \sba{Pfg} is the background and foreground number of pixels based on the threshold that is being tested.
+
+\begin{align}
+    \begin{split}
+        \sie{w_bg}(\sie{t}) &=\frac{\sie{Pbg}(\sie{t})}{\sie{Pall}} \\
+        \sie{w_fg}(\sie{t}) &=\frac{\sie{Pfg}(\sie{t})}{\sie{Pall}} 
+    \end{split}\label{algo:otsu:wts}
+\end{align}
+
+The variance is calculated then by summing the square of the difference between the value of each pixel (\sba{xi}) and the mean value of the pixels (\sba{xb}).  The sum is then divided by the total number of pixels in the group (\sba{N}) minus 1.  Equation \ref{algo:otsu:var} is thus used to calculate both \sba{sig_bg} and \sba{sig_fg} at the current threshold.  After all of these values have been found equation \ref{algo:otsu:main} is then used to calculate the total variance at the current threshold.
+
+\begin{align}
+    \sie{sig}^{2}(\sie{t})&=\frac{\sum\left(\sie{xi}-\sie{xb}\right)^{2}}{\sie{N}-1} \label{algo:otsu:var}
+\end{align}
+
+% Best Explenation 
+% https://theailearner.com/tag/suzuki-contour-algorithm-opencv/
+\subsubsection{Suzuki’s Contour tracing algorithm}
+\symbsec{suzuki_contour}
+
+\rf{Remember to illustrate}
+
+
+\subsection{Harrison Corner Detection}
+
+\rf{Insert example image}
+
+The detection of the calibration points of the checkered board requires an accurate location of the checkered board intersections in the image and relate it to the real world points.  When using the Tsai camera calibration not many points nor images are required for the calibration, and can thus be accomplished by hand.  When using the Zhang camera calibration, multiple points and images are required for accurate calibration.
+
+The most common detector used for this type of corner detection, is the Harris corner detection \rf{ref}\rf{slidesref}.  The detection of the corners are based on the autocorrelation function in equation \ref{algo:harris:main}.  The function makes use of a sliding window ($w(x, y)$) to compare neighbouring intensities and find interest points.  The window can either be a rectangular window, or a pixel-weighted Gaussian window.  The difference between the shifted intensity and the current window intensity is then determined to find the interest points.
+
+\begin{align}
+    E(u, v)=\sum_{x, y} \underbrace{w(x, y)}_{\text {window function }}[\underbrace{I(x+u, y+v)}_{\text {shifted intensity }}-\underbrace{I(x, y)}_{\text {intensity }}]^{2} \label{algo:harris:main}
+\end{align}
+
+The shifted intensity can be simplified by using the first-order Taylor expansion which simplifies equation \ref{algo:harris:main} to equation \ref{algo:harris:taylr1}.  The covariance ($M$) is then used to determine the function of the ellipse at $u,v$.  
+
+\begin{align}
+    \begin{split} \label{algo:harris:taylr1}
+         E(u, v) &\approx\left[\begin{array}{ll}u & v\end{array}\right] M\left[\begin{array}{l}u\\v\end{array}\right]\\
+        M&=\sum_{x, y} w(x, y)\left[\begin{array}{ll}I_{x} I_{x} & I_{x} I_{y} \\I_{x} I_{y} & I_{y} I_{y}\end{array}\right]
+    \end{split}
+\end{align}
+
+To calculate the harris response ($R$), the eigenvalues of the covariance ($\lambda_1$ and $\lambda_2$) is required \rf{Insert image}.  \rf{Expand on lambdas for corner, edge and flat regions}.  The mathematical expression of the harris response can be defined in terms of the eigenvalues of the covariance matrix, as shown in equation \ref{algo:harris:rspE}.  As the determinant of the covariance matrix is the same as the product of the eigenvalues of the matrix, and the trace of the covariance matrix is the same as the sum of the eigenvalues, the equation can be simplified to equation \ref{algo:harris:rspF}.  \rf{Mention Triggs and Szeliski versions, why was Szeliski used maybe?}
+
+\begin{align}
+    R &= \lambda_1\lambda_2 - k (\lambda_1 + \lambda_2)^2 \label{algo:harris:rspE}\\
+    R &= det(M) - k(traceM)^2 \label{algo:harris:rspF}
+\end{align}
+
+To determine corners, edges and flat regions of the image, the following can be applied:
+
+\begin{align*}
+    \text{Flat regions:   } R &\approx 0\\
+    \text{Corners:   } R &>0 \\
+    \text{Edges:   } R &< 0
+\end{align*}
+
+
+\rf{This is part of implementation, not design}
+The spatial derivatives in the vertical and horizontal directions can be approximated by using the Sobel operator \rf{ref}.  The Sobel operator convolves two 3x3 kernels with the gray-scale image to accentuate the edges of objects in the image based on the gradient changes.  These gradient changes are filtered for in both the x- and y-axis.  $G_x$ is the x-axis kernel, and $G_y$ the y-axis kernel (equation \ref{algo:sobel}).
+
+% This image can also be threshold by an algorithm like the Otsu thresholding or adaptive thresholding to filter out noise, adjust the gamma of an image, blurring the image, 
+
+\begin{align}
+    \begin{split} \label{algo:sobel}
+    G_x&=\left[\begin{array}{lll}
+        +1 & 0 & -1 \\
+        +2 & 0 & -2 \\
+        +1 & 0 & -1
+        \end{array}\right] * \mathbf{A} \quad \\
+    \quad G_y&=\left[\begin{array}{ccc}
+        +1 & +2 & +1 \\
+        0 & 0 & 0 \\
+        -1 & -2 & -1
+        \end{array}\right] * \mathbf{A}
+    \end{split}
+\end{align}
+
+\rf{Excellent explanation: \href{https://www.youtube.com/watch?v=_qgKQGsuKeQ&t=2545s}{Youtube lecture}}
+
+
+
+
+
+\subsection{Coordinate to real world points}
+
+\rf{Compare Tsai results, and maybe include source in appendix if space... my time spent does not mean include!}
+
+
+\subsection{Direct Linear Transform (DLT)}
+
+
+\subsection{Zhang implementation}
+
+Zhang uses planar calibration Matrix
+
+As shown in equations \ref{eq:Mtrx:Comb} and \ref{eq:Mtrx:CombFull}, the camera matrix is calculated by finding the intrinsic and extrinsic parameters.  As Zhang's camera calibration method uses only a planar calibration checkered board, the $Z$ coordinate of the world points can be disregarded as it stays constant if the plane is assumed to be the origin.  This thus allows us to simplify equation \ref{eq:Mtrx:CombFull} to equation \ref{algo:zhang:fund}.
+
+\symbsec{cameraMtx}
+\begin{align}
+\left[\begin{array}{l}
+x \\
+y \\
+1
+\end{array}\right]=\left[\begin{array}{ccc}
+    \sie{f} & \sie{s} & \sie{o_x} \\
+    0 & \sie{eta}\sie{f} & \sie{o_y} \\
+    0 & 0 & 1
+    \end{array}\right]\left[\begin{array}{ccc}
+r_{11} & r_{12} & t_{1} \\
+r_{21} & r_{22} & t_{2} \\
+r_{31} & r_{32} & t_{3}
+\end{array}\right]\left[\begin{array}{c}
+X \\
+Y \\
+1
+\end{array}\right] \label{algo:zhang:fund}
+\end{align}
+
+When the world points and image points are replaced into equation \ref{algo:zhang:fund}, equation \ref{algo:zhang:perPnt} is found.
+
+\begin{align}
+\left[\begin{array}{c}
+x_{i} \\
+y_{i} \\
+1
+\end{array}\right]=\underset{3 \times 3}{H}\left[\begin{array}{c}
+X_{i} \\
+Y_{i} \\
+1
+\end{array}\right] \quad i=1, \ldots, I \label{algo:zhang:perPnt} 
+\end{align}
+
+\subsection{8-point Algorithm}
+
+% More than 8 points, matrix becomes regular but should not.
+
+Two sets of points and intrinsic matrices
+\begin{itemize}
+    \item Left camera: $p_l$ and $K_l$
+    \item Right camera: $p_r$ and $K_r$
+\end{itemize}
+
+Normalize points $p_l$ and $p_r$ and denote as $p_{ln}$ and $p_{rn}$
+
+$A$ is then calculated for each homologous (\rf{means corresponding point in each image}) set of points of $p_{ln}$ and $p_{rn}$ with equation \ref{algo:A}.  $i$ is the current point, $x_{ln}$ and $y_{ln}$ is the left and right components respectively.
+
+\begin{align}
+    A(i) &= [x_{rn}(i) \times  x_{ln}(i), x_{rn}(i) \times  y_{ln}(i), x_{rn}(i), y_{rn}(i) \times  x_{ln}(i), y_{rn}(i) \times  y_{ln}(i), y_{rn}(i), x_{ln}(i), y_{ln}(i), 1] \label{algo:A}
+\end{align}
+
+$N$ is the number of points
+
+\begin{itemize}
+    \item $A$ is a $Nx9$ Matrix
+    \item $U$ is a $NxN$ Matrix
+    \item $D$ is a $Nx9$ Matrix
+    \item $V^T$ is a $9x9$ Matrix
+\end{itemize}
+ consist of the vectors $U$, $D$ and $V^T$.
+
+\begin{align}
+A=U D V^{T} \label{algo:8pnt:base}
+\end{align}
+
+Find the single value decomposition (SVD) of $A$
+
+
+Need to enforce rank 2 on the fundamental Matrix:
+
+Use $V^T$ to fill the temporary Fundamental matrix $F^{\top}$
+
+\begin{align}
+U D V^{\top} &= \text{SVD}(F^{\top})\label{algo:8pnt:base}
+\end{align}
+
+Find the new Fundamental Matrix then:
+\begin{align}
+    F &= U \operatorname{diag}\left(D_{11}, D_{22}, 0\right) V^{\top}
+\end{align}
+
+The normalisation is reversed on F then to obtain final fundamental Matrix.  The transpose of the intrinsic matrix $K_2$ is multiplied with the Fundamental matrix, which is multiplied with the intrinsic matrix of the first camera $K_1$
+
+\begin{align}
+    E &= K_2^{\top} \times F \times K_1
+\end{align}
+
+The rotation matrix ($R$) and translation matrix ($T$) of the right camera to the left, can be determined by equation \ref{algo:Edecomp}.
+
+\begin{align}
+E=\left[\begin{array}{ccc}
+0 & -T_{2} & T_{1} \\
+T_{2} & 0 & -T_{0} \\
+-T_{1} & T_{0} & 0
+\end{array}\right] R \label{algo:Edecomp}
+\end{align}
+
+The baseline of the cameras can be determined from the translation matrix.  These matrices will also show the vertical, horizontal and rotational differences between the two cameras.
+
+These Extrinsic parameters can then be used to align the camera images after they have been rectified.
+
+\rf{This comes under the results section}
+
+While the rotation matrix $R$ should ideally be a 3x3 identity matrix, the difference show the slight deviations during manufacturing.  The translation matrix ($T$) is ideally the Baseline distance and 0,0.  This is however also slightly different due to manufacturing not being perfect.
+
+
+
+
+
+% A = UDV^T
+
+
+
+\subsection{Extrinsic parameter implementation}
+
+Summary
+\begin{itemize}
+    \item Relative orientation (rotation and translation matrix)
+    \item Fundamental Matrix
+    \item Essential Matrix
+\end{itemize}
+
+(total 12 parameters)
+
+\section{Depth Tracking}
+
+\subsection{Camera Image rectification}
+\subsection{Camera Image cropping and alignment}
+\subsection{Disparity Mapping}
+\subsection{Q Matrix for real depth Map}
+
+
+
+\section{Facial Recognition}
+
+\subsection{Viola-Jones}
+
+
+
+
+
+\glsaddall
+% ________________________________________________
+%                   Glosseries
+% ________________________________________________
+\renewcommand{\arraystretch}{1.5}
+\newglossarystyle{symbunitlong}{%
+\setglossarystyle{long3col}% base this style on the list style
+\renewenvironment{theglossary}{% Change the table type --> 3 columns
+  \begin{longtable}{lp{0.6\glsdescwidth}>{\centering}p{2cm}>{\centering\arraybackslash}p{2cm}}}%
+  {\end{longtable}}%
+  
+%
+\renewcommand*{\glossaryheader}{%  Change the table header
+  \bfseries Symbol & \bfseries Description & \bfseries Unit & \bfseries Equation\\
+  \hline
+  \endhead}
+
+
+\renewcommand*{\glossentry}[2]{%  Change the displayed items
+\glstarget{##1}{\glossentryname{##1}} %
+& \glossentrydesc{##1}% Description
+& \glsunit{##1} 
+& \glseqn{##1} \tabularnewline
+}
+}
+
+\newpage
+% \printglossary[type=symbolslist,style=symbunitlong,title={Symbols}]   % list of symbols
+\printnoidxglossary[type=symbolslist,sort=use,style=symbunitlong,title={Symbols}]
+\newpage
+\printglossary[type=main]
+\newpage
+\printglossary[type=\acronymtype]
+
+
+
+\input{code}
+
+
+\end{document}

@@ -1,0 +1,183 @@
+\setlength{\glsdescwidth}{15cm}
+
+\newglossary[slg]{symbolslist}{syi}{syg}{Symbolslist} % create add. symbolslist
+\glsaddkey{unit}{\glsentrytext{\glslabel}}{\glsentryunit}{\GLsentryunit}{\glsunit}{\Glsunit}{\GLSunit}
+\glsaddkey{eqtn}{\glsentrytext{\glslabel}}{\glsentryeqn}{\GLsentryeqn}{\glseqn}{\Glseqn}{\GLSeqn}
+
+
+% -------------------------------------------------------------------
+%                   Camera Matrix
+% -------------------------------------------------------------------
+
+\newglossaryentry{symb:cameraMtx:K}{name=$K$,
+        description={Intrinsic Matrix of a pinhole camera model},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Comb}, \ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:P}{name=$P$,
+        description={Pinhole Camera Matrix},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Comb}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:s}{name=$s$,
+        description={Axis skew},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:f}{name=$f$,
+        description={Focal Length},
+        unit={pixels},
+        eqtn={\ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:eta}{name=$\eta$,
+        description={Pixel skew},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:o_x}{name=$o_x$,
+        description={Principle-point offset of the camera along the x-axis},
+        unit={pixels},
+        eqtn={\ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:o_y}{name=$o_y$,
+        description={Principle-point offset of the camera along the y-axis},
+        unit={pixels},
+        eqtn={\ref{eq:Mtrx:Int}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:R}{name=$R$,
+        description={Camera Rotation Matrix},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Comb}, \ref{eq:Mtrx:Ext}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:bt}{name=$\boldsymbol{t}$,
+        description={Camera translation Matrix},
+        unit={},
+        eqtn={\ref{eq:Mtrx:Comb}, \ref{eq:Mtrx:Ext}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:base}{name=$\boldsymbol{Baseline}$,
+        description={Baseline between the cameras},
+        unit={},
+        eqtn={},
+        type=symbolslist}
+
+\newglossaryentry{symb:cameraMtx:F}{name=$F$,
+        description={Focal length of the camera},
+        unit={\si{mm}},
+        eqtn={\ref{eq:Mtrx:fcl}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:W_x}{name=$W_x$,
+        description={Width of camera sensor},
+        unit={\si{mm}},
+        eqtn={\ref{eq:Mtrx:fcl}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:w_x}{name=$w_x$,
+        description={Width of camera sensor},
+        unit={pixels},
+        eqtn={\ref{eq:Mtrx:fcl}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:cameraMtx:kr}{name=$k_r$,
+        description={Radial lens distortion coefficient},
+        unit={pixels},
+        eqtn={\ref{eq:Mtrx:rad}},
+        type=symbolslist}
+
+
+% -------------------------------------------------------------------
+%                   Otsu thresholding
+% -------------------------------------------------------------------
+
+
+\newglossaryentry{symb:otsu:t}{name=$t$,
+        description={Otsu threshold},
+        unit={},
+        eqtn={\ref{algo:otsu:main}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:sig}{name=$\sigma$,
+        description={Variance (thresholding)},
+        unit={},
+        eqtn={\ref{algo:otsu:main}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:sig_bg}{name=$\sigma_{bg}$,
+        description={Variance Background (thresholding)},
+        unit={},
+        eqtn={\ref{algo:otsu:main}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:sig_fg}{name=$\sigma_{fg}$,
+        description={Variance Foreground (thresholding)},
+        unit={},
+        eqtn={\ref{algo:otsu:main}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:w_bg}{name=$\omega_{bg}$,
+        description={Background thresholding weight},
+        unit={},
+        eqtn={\ref{algo:otsu:main}, \ref{algo:otsu:wts}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:w_fg}{name=$\omega_{fg}$,
+        description={Foreground thresholding weight},
+        unit={},
+        eqtn={\ref{algo:otsu:main}, \ref{algo:otsu:wts}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:Pall}{name=$P_{all}$,
+        description={Total number of pixels},
+        unit={pixels},
+        eqtn={\ref{algo:otsu:main}, \ref{algo:otsu:wts}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:Pfg}{name=$P_{FG}$,
+        description={Total foreground pixels at threshold $t$},
+        unit={pixels},
+        eqtn={\ref{algo:otsu:main}, \ref{algo:otsu:wts}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:Pbg}{name=$P_{BG}$,
+        description={Total background pixels at threshold $t$},
+        unit={pixels},
+        eqtn={\ref{algo:otsu:main}, \ref{algo:otsu:wts}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:xi}{name=$x_i$,
+        description={Pixel $i$ value of the group},
+        unit={},
+        eqtn={\ref{algo:otsu:var}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:xb}{name=$\bar{x}$,
+        description={Mean values of the group of pixels},
+        unit={},
+        eqtn={\ref{algo:otsu:var}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:otsu:N}{name=$N$,
+        description={Number of pixels},
+        unit={pixels},
+        eqtn={\ref{algo:otsu:var}},
+        type=symbolslist}
+        
+        
+% -------------------------------------------------------------------
+%                   Suzuki Contouring
+% -------------------------------------------------------------------
+
+\newglossaryentry{symb:suzuki_contour:N}{name=$N$,
+        description={Number of pixels},
+        unit={pixels},
+        eqtn={\ref{algo:otsu:var}},
+        type=symbolslist}
