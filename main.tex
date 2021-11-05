@@ -13,6 +13,10 @@
 \usepackage[parfill]{parskip}
 \usepackage{minted}
 
+\usepackage{graphicx}
+\graphicspath{ {./Images/} }
+\usepackage{subcaption}
+\usepackage[export]{adjustbox}
 
 % For Code formatting
 
@@ -37,6 +41,12 @@
 \newcommand{\sie}[1]{\text{\gls{symb:cameraMtx:#1}}}   %Symbol in equation
 \newcommand{\sba}[1]{\gls{symb:cameraMtx:#1}}          % Symbol in text
 
+\newcommand{\imgsec}[1]{
+    \graphicspath{ {./Images/#1/} }
+}
+\newcommand{\imgsubsec}[2]{
+    \graphicspath{ {./Images/#1/#2/} }
+}
 
 \newcommand{\symbsec}[1]{
     \renewcommand{\sie}[1]{\text{\gls{symb:#1:##1}}}
@@ -204,38 +214,38 @@ Z \\
 
 Intrinsic camera pin hole model intrinsic matrix
 
-\textbf{Links Tsai Calibration:}
-\begin{itemize}
-    \item \href{https://en.wikipedia.org/wiki/Camera_resectioning#Tsai.27s_Algorithm}{Wikipedia Tsai Basic}
-    \item \href{https://en.wikipedia.org/wiki/Pinhole_camera_model}{Pinhole Camera Model (Wiki)}
-    \item \href{https://github.com/bailus/tsai-calibration}{Github Impl 1}
-    \item \href{https://github.com/siddharthKatageri/tsai-camera-calibration}{Github impl 2}
-\end{itemize}
-\textbf{Links Camera Models:}
-\begin{itemize}
-    \item \href{https://ksimek.github.io/2013/08/13/intrinsic/}{Pinhole model}
-    \item \href{https://ksimek.github.io/perspective_camera_toy.html}{Pinhole camera Toy}
-\end{itemize}
+% \textbf{Links Tsai Calibration:}
+% \begin{itemize}
+%     \item \href{https://en.wikipedia.org/wiki/Camera_resectioning#Tsai.27s_Algorithm}{Wikipedia Tsai Basic}
+%     \item \href{https://en.wikipedia.org/wiki/Pinhole_camera_model}{Pinhole Camera Model (Wiki)}
+%     \item \href{https://github.com/bailus/tsai-calibration}{Github Impl 1}
+%     \item \href{https://github.com/siddharthKatageri/tsai-camera-calibration}{Github impl 2}
+% \end{itemize}
+% \textbf{Links Camera Models:}
+% \begin{itemize}
+%     \item \href{https://ksimek.github.io/2013/08/13/intrinsic/}{Pinhole model}
+%     \item \href{https://ksimek.github.io/perspective_camera_toy.html}{Pinhole camera Toy}
+% \end{itemize}
 
-\subsection{Tsai vs Zhang}
+% \subsection{Tsai vs Zhang}
 
-\textbf{\textit{Algos:}}
-\begin{itemize}
-    \item HSV Filtering
-    \item Otsu Threshold - \href{https://muthu.co/otsus-method-for-image-thresholding-explained-and-implemented/}{Math}
-    \item Median Blur
-    \item Suzuki contouring - \href{https://theailearner.com/tag/suzuki-contour-algorithm-opencv/}{Math}
-    \item Harris Corner detection - \href{https://muthu.co/harris-corner-detector-implementation-in-python/}{Math}
-\end{itemize}
+% \textbf{\textit{Algos:}}
+% \begin{itemize}
+%     \item HSV Filtering
+%     \item Otsu Threshold - \href{https://muthu.co/otsus-method-for-image-thresholding-explained-and-implemented/}{Math}
+%     \item Median Blur
+%     \item Suzuki contouring - \href{https://theailearner.com/tag/suzuki-contour-algorithm-opencv/}{Math}
+%     \item Harris Corner detection - \href{https://muthu.co/harris-corner-detector-implementation-in-python/}{Math}
+% \end{itemize}
 
-\acrlong{gcd}
+% \acrlong{gcd}
 
 
 % \glsaddall[types={symbolslist}]
 
 
 
-\textbf{Variables explained}
+% \textbf{Variables explained}
 % \end{equation}
 
 
@@ -336,7 +346,7 @@ The spatial derivatives in the vertical and horizontal directions can be approxi
 
 \rf{Excellent explanation: \href{https://www.youtube.com/watch?v=_qgKQGsuKeQ&t=2545s}{Youtube lecture}}
 
-
+\subsection{Saddle Point detection}
 
 
 
@@ -492,6 +502,44 @@ Summary
 \section{Facial Recognition}
 
 \subsection{Viola-Jones}
+\imgsubsec{FacialRecognition}{ViolaJones}
+
+\subsubsection{Input Image Preprocessing}
+
+\begin{enumerate}
+    \item Gray scale of image
+    \item calculate integral of image (show integral image calculation)
+\end{enumerate}
+
+\textbf{Integral Image}
+
+\begin{figure}[h]
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{exampleImg.png} 
+        \caption{Image example}
+        \label{fig:vj:exm}
+    \end{subfigure}
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=6cm,center,keepaspectratio]{IntegralImg.png}
+        \caption{Integral Image}
+        \label{fig:vj:int}
+    \end{subfigure}
+    \caption{Integral Image Calculations}
+    \label{fig:vj:main}
+\end{figure}
+
+An integral image is calculated before hand by summing all values from the upper-left pixel to the current pixel.  This reduces calculation time for each rectangular window as instead of having to sum each value in the window, only four values have to be used to calculate the sum of all the values in a rectangle.  Suppose the image values looks like shown in figure \ref{fig:vj:exm} with the integral of the image shown in figure \ref{fig:vj:int}.  Instead of summing each value in the blue square in figure \ref{fig:vj:exm} (as shown in equation \ref{eq:vj:exm}), the two orange values (19 and 15) in figure \ref{fig:vj:int} can be subtracted from the sum of the blue values (6 and 50) in figure \ref{fig:vj:int} to find the sum of the values in the rectangle (shown in equation \ref{eq:vj:intS}).  For a window of size 2x2 this adds to be the same number of calculations, thus adding no value.  However, if the window size is 255x255 of a 1280x720 image, the summation calculations require 65025 operations, while the integral image only takes four operations still.  As the sum of various size windows (for various size faces in the image) and multiple windows of each size (to scan the image) are calculate, this decrease in operations greatly increases the efficiency and speed of the calculations.
+
+\begin{align}
+    4 + 3 + 8 + 7 &= 22 \label{eq:vj:exm}\\
+    50 + 6 - 15 - 19 &= 22 \label{eq:vj:intS}
+\end{align}
+
+\subsubsection{Haar features}
+
+\begin{itemize}
+    \item list each type of haarlike feature
+\end{itemize}
 
 
 
