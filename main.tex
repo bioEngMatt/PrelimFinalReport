@@ -48,6 +48,8 @@
     \graphicspath{ {./Images/#1/#2/} }
 }
 
+\newcommand{\degrs}{\ensuremath{^{\circ}}}
+
 \newcommand{\symbsec}[1]{
     \renewcommand{\sie}[1]{\text{\gls{symb:#1:##1}}}
     \renewcommand{\sba}[1]{\gls{symb:#1:##1}}
@@ -58,6 +60,7 @@
 \newcommand{\mlCode}[1]{
     \inputminted
     [
+    breaklines=true,
     frame=lines,
     framesep=2mm,
     baselinestretch=1.2,
@@ -71,6 +74,8 @@
 \newcommand{\pyCode}[1]{
     \inputminted
     [
+    breaklines=true,
+    breakafter={,} ,
     frame=lines,
     framesep=2mm,
     baselinestretch=1.2,
@@ -511,16 +516,18 @@ Summary
     \item calculate integral of image (show integral image calculation)
 \end{enumerate}
 
-\textbf{Integral Image}
+\subsubsection{Integral Image}
+
+An integral image is calculated before hand by summing all values from the upper-left pixel to the current pixel.  This reduces calculation time for each rectangular window as instead of having to sum each value in the window, only four values have to be used to calculate the sum of all the values in a window.  Suppose the image values looks like shown in figure \ref{fig:vj:exm} with the integral of the image shown in figure \ref{fig:vj:int}.  Instead of summing each value in the blue square in figure \ref{fig:vj:exm} (as shown in equation \ref{eq:vj:exm}), the two orange values (19 and 15) in figure \ref{fig:vj:int} can be subtracted from the sum of the blue values (6 and 50) in figure \ref{fig:vj:int} to find the sum of the values in the window (shown in equation \ref{eq:vj:intS}).
 
 \begin{figure}[h]
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{exampleImg.png} 
+        \includegraphics[width=0.9\linewidth, height=4.5cm,keepaspectratio,center]{exampleImg.png} 
         \caption{Image example}
         \label{fig:vj:exm}
     \end{subfigure}
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=0.9\linewidth, height=6cm,center,keepaspectratio]{IntegralImg.png}
+        \includegraphics[width=0.9\linewidth, height=4.5cm,center,keepaspectratio]{IntegralImg.png}
         \caption{Integral Image}
         \label{fig:vj:int}
     \end{subfigure}
@@ -528,20 +535,129 @@ Summary
     \label{fig:vj:main}
 \end{figure}
 
-An integral image is calculated before hand by summing all values from the upper-left pixel to the current pixel.  This reduces calculation time for each rectangular window as instead of having to sum each value in the window, only four values have to be used to calculate the sum of all the values in a rectangle.  Suppose the image values looks like shown in figure \ref{fig:vj:exm} with the integral of the image shown in figure \ref{fig:vj:int}.  Instead of summing each value in the blue square in figure \ref{fig:vj:exm} (as shown in equation \ref{eq:vj:exm}), the two orange values (19 and 15) in figure \ref{fig:vj:int} can be subtracted from the sum of the blue values (6 and 50) in figure \ref{fig:vj:int} to find the sum of the values in the rectangle (shown in equation \ref{eq:vj:intS}).  For a window of size 2x2 this adds to be the same number of calculations, thus adding no value.  However, if the window size is 255x255 of a 1280x720 image, the summation calculations require 65025 operations, while the integral image only takes four operations still.  As the sum of various size windows (for various size faces in the image) and multiple windows of each size (to scan the image) are calculate, this decrease in operations greatly increases the efficiency and speed of the calculations.
-
 \begin{align}
     4 + 3 + 8 + 7 &= 22 \label{eq:vj:exm}\\
     50 + 6 - 15 - 19 &= 22 \label{eq:vj:intS}
 \end{align}
 
+  For a window of size 2x2 this adds to be the same number of calculations, thus adding no value.  However, if the window size is 255x255 of a 1280x720 image, the summation calculations require 65025 operations, while the integral image only takes four operations still.  As the sum of various size windows (for various size faces in the image) and multiple windows of each size (to scan the image) are calculate, this decrease in operations greatly increases the efficiency and speed of the calculations.
+
 \subsubsection{Haar features}
 
-\begin{itemize}
-    \item list each type of haarlike feature
-\end{itemize}
+The Haar features that are searched for look like in figure \ref{fig:vj:edgehaar}.  The white and black regions can be interchanged for white 'lines' instead of black 'lines' as well.
+
+\begin{figure}[h]
+    \begin{subfigure}{0.19\textwidth}
+        \includegraphics[width=0.9\linewidth, height=1.5cm,keepaspectratio,center]{edgeFeature_1.png} 
+    \end{subfigure}
+    \begin{subfigure}{0.19\textwidth}
+        \includegraphics[width=0.9\linewidth, height=1.5cm,center,keepaspectratio]{edgeFeature_2.png}
+    \end{subfigure}
+    \begin{subfigure}{0.19\textwidth}
+        \includegraphics[width=0.9\linewidth, height=1.5cm,center,keepaspectratio]{lineFeature_1.png}
+    \end{subfigure}
+    \begin{subfigure}{0.19\textwidth}
+        \includegraphics[width=0.9\linewidth, height=1.5cm,center,keepaspectratio]{lineFeature_2.png}
+    \end{subfigure}
+    \begin{subfigure}{0.19\textwidth}
+        \includegraphics[width=0.9\linewidth, height=1.5cm,center,keepaspectratio]{chckFeature.png}
+    \end{subfigure}
+    \caption{Haar Features.}
+    \label{fig:vj:edgehaar}
+\end{figure}
+
+\subsubsection{AdaBoost Training}
+
+As there can be more than 180000 features in a 24x24 image \rf{ref}, the features that are not useful must be filtered out.  This is accomplished by using a dataset of facial images and non-facial images (images are categorised) to filter out the useful haar features ($f_n$ in equation \ref{eq:vj:adabst:main}) as well as their weights ($\alpha_{n}$ in equation \ref{eq:vj:adabst:main}) unique to faces.  Viola and Jones used 4960 faces and 9544 non-faces as training data for the algorithm.  As some of the features are found in both faces and non-faces, it is the combination of features that determines the algorithm's confidence of whether or not it is a face (equation \ref{eq:vj:adabst:main}). 
+
+\begin{align}
+    F(x)=\alpha_{1} f_{1}(x)+\alpha_{2} f_{2}(x)+\alpha_{3} f_{3}(x)+\ldots+\alpha_{n} f_{n}(x) \label{eq:vj:adabst:main}
+\end{align}
+
+Should a face be found in the image, the result ($y_n$) is equals 1, and if no face is found the result is returned as 0.  This is then compared to the known results of the faces and non-faces.  The weights are initialised by equation \ref{eq:vj:ada:wts:int}.  $N$ is the total number of images used for the training.
+
+\begin{align}
+    w_{1}^{i}=\frac{1}{N} \label{eq:vj:ada:wts:int}
+\end{align}
+
+The weights are then normalised (equation \ref{eq:vj:ada:wts:norm} with $w_t$ being the probability distribution for each classifier ($t$).  A single feature classifier ($f_t$) and evaluate the error of the classifier with respect to $w_t,i$ as shown in equation \ref{eq:vj:ada:wts:err}, and the classifier with the lowest error is selected.  
+
+\begin{align}
+    w_{t, i}&=\frac{w_{t, i}}{\sum_{j=1}^{N} w_{t, j}} \label{eq:vj:ada:wts:norm} \\
+    \epsilon_{j}&=\sum_{i} w_{t, i}\left|f_{t}\left(x_{i}\right)-y_{i}\right| \label{eq:vj:ada:wts:err}
+\end{align}
+
+The weights are then updated by equation \ref{eq:vj:ada:wts:updt}.
+
+\begin{align}
+    \begin{split}
+        w_{t+1, i}&=w_{t, i} \beta^{1-\epsilon_{t}}\\
+        \beta_{t}&=\frac{\epsilon_{t}}{1-\epsilon_{t}}\\
+        \alpha_{t}&=\log \left(\frac{1}{\beta_{t}}\right)
+    \end{split}  \label{eq:vj:ada:wts:updt}
+\end{align}
+
+The final sum and weights of the haar classifiers can then be defined by equation \ref{eq:vj:ada:wts:final}.
+
+\begin{align}
+    F(x)=\left\{\begin{array}{c}
+    1 \text { if } \sum_{t=1}^{T} \alpha_{t} f_{t}(x) \geq 0.5 \sum_{t=1}^{T} \alpha_{t} \\
+    0 \text { otherwise }
+    \end{array}\right. \label{eq:vj:ada:wts:final}
+\end{align}
+
+Calculating all of the features, multiplying their weights and summing the results for each window in the image can decrease the speed of the calculations.  Thus to improve the efficiency of the algorithm, the features can be cascaded with the features with the largest weights (also called strong classifiers) can be determined for first.  After the strongest classifier is determined that it is present, the second strongest classifier is tested to be present and so on.  Should any of the strong classifiers not be, the algorithm will determine that there is no face in the window, and move on to testing the next window.  This thus does not compute the weak classifiers for windows that do not include the strong classifiers already, and have a good probability of being faces already.
+
+\rf{Show cascaded drawing and reference}
+\rf{Show your strongest classifiers}
+
+\rf{Viola Jones show detection of eyes etc}
+
+\subsection{Show Suzuki contour detection}
+
+\subsection{Talk about triangulation of robotic arm (and maybe show too}
+
+\section{Arm Kinematics}
+
+\rf{Approach}
+\rf{Comparison of robotic arms}
+
+\rf{Design}
+\imgsubsec{RoboticArm}{Kinematics}
+\textbf{I chose a custom 6-DOF robotic arm}
+\rf{Only speak of the kinematics here, and the design where necessary}
+
+\symbsec{rba}
+
+The robotic arm is divided in six links as shown in figure \ref{fig:arm:basestruct}, which are denoted as \sba{s0}, \sba{s1}, \sba{s2}, \sba{s3}, \sba{s4} and \sba{s5}.  Each link is a different length to ensure the arm has the required 6-DOF, and can extend to a maximum horizontal distance of 1 m from the base of the arm.  The joints that connect the robotic arm links to each other are denoted as $J_x$ where $x$ is the joint number.  
+
+The base rotational joint (\sba{j0}), which is inside the base of the robotic arm, is responsible for 360\degrs of rotation of the robotic arm around the base.  This axis of rotation is symbolised by \sba{thrust_r}.  This is to allow the robotic arm to pick the cup up from any direction parallel to its base and transport it to the user's mouth.  The radial joints (\sba{j1}, \sba{j2} and \sba{j4}) are responsible for majority of the vertical manipulation the cup in the direction symbolised by \sba{radial_r}.  The joints \sba{j1} and \sba{j2} are capable of rotating 105\degrs in both directions of their axis (shown as dashed lines in figure \ref{fig:arm:basestruct}), while the joint \sba{j4} can only rotate a maximum of 90\degrs around its axis.  The joints \sba{j3} and \sba{j5} also rotate as the base joint rotates in the \sba{thrust_r} direction, however the majority of the forces acting on the joints are radial instead of axial.  The joint \sba{j3} and \sba{j5} both can rotate 360\degrs.  
+
+\begin{figure}[h]
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{Robotic_Arm_segments.pdf} 
+    \end{subfigure}
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{Robotic_rotationBase.pdf} 
+    \end{subfigure}
+    \caption{Robotic Arm in Segments}
+    \label{fig:arm:basestruct}
+\end{figure}
 
 
+
+\rf{Make Table of lengths and rotations}
+
+
+\subsection{How each corner was calculated}
+\subsection{Calibration of potentiometers}
+\subsection{Robotic arm design and controller design}
+\subsection{Robotic arm manufacturing specifics}
+
+\section{Cup}
+\subsection{capacitive liquid level sensing}
+\subsection{Accelerometer/Gyroscope calibration}
+\subsection{system meshing}
 
 
 
