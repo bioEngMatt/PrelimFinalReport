@@ -228,49 +228,64 @@
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j0}{name=$J_0$,
-        description={Thrust Rotation joint in the base of the arm.  The direction of rotation in relation to the previous connected link is $\phi_r$.},
+        description={Thrust Rotation joint in the base of the arm.  The direction of rotation in relation to the previous connected link is $\theta_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j1}{name=$J_1$,
-        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\theta_r$.},
+        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\varphi_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j2}{name=$J_2$,
-        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\theta_r$.},
+        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\varphi_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j3}{name=$J_3$,
-        description={Radial and thrust Rotation joint of the robotic arm.  The direction of rotation in relation to the previous connected link is $\phi_r$.},
+        description={Radial and thrust Rotation joint of the robotic arm.  The direction of rotation in relation to the previous connected link is $\theta_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j4}{name=$J_4$,
-        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\theta_r$.},
+        description={Radial Rotation joint of the robotic arm.  he direction of rotation in relation to the previous connected link is $\varphi_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
 \newglossaryentry{symb:rba:j5}{name=$J_5$,
-        description={Radial rotation joint of the robotic arm.  The direction of rotation in relation to the previous connected link is $\phi_r$.},
+        description={Radial rotation joint of the robotic arm.  The direction of rotation in relation to the previous connected link is $\theta_r$.},
         unit={},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
-\newglossaryentry{symb:rba:thrust_r}{name=$\phi_r$,
+\newglossaryentry{symb:rba:thrust_r}{name=$\theta_r$,
         description={Rotational direction of a joint which keeps the angle between the connected links constant.},
         unit={deg},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}
         
-\newglossaryentry{symb:rba:radial_r}{name=$\theta_r$,
+\newglossaryentry{symb:rba:radial_r}{name=$\varphi_r$,
         description={Rotational direction of a joint which changes the angle between the connected links.},
         unit={deg},
+        eqtn={\ref{fig:arm:basestruct}},
+        type=symbolslist}
+        
+
+% Point system
+
+\newglossaryentry{symb:rba:porig}{name=$P_{ORIG}$,
+        description={The point of the rotational centre of $J_1$ in three dimensional space, which is used as the origin point of the system.},
+        unit={mm},
+        eqtn={\ref{fig:arm:basestruct}},
+        type=symbolslist}
+        
+\newglossaryentry{symb:rba:pcup}{name=$P_{cup}$,
+        description={The point of the rotational centre of the cup in three dimensional space in relation to $P_{ORIG}$.},
+        unit={mm},
         eqtn={\ref{fig:arm:basestruct}},
         type=symbolslist}

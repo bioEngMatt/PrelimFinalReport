@@ -17,6 +17,7 @@
 \graphicspath{ {./Images/} }
 \usepackage{subcaption}
 \usepackage[export]{adjustbox}
+\usepackage{multirow}
 
 % For Code formatting
 
@@ -25,6 +26,8 @@
 \definecolor{LightBlue}{rgb}{0.78, 0.9, 1.}
 \usemintedstyle{ansimagenta}
 
+
+\usepackage{stackengine}
 % Package adjustment
 
 \hypersetup{
@@ -49,6 +52,8 @@
 }
 
 \newcommand{\degrs}{\ensuremath{^{\circ}}}
+
+\newcommand\xrowht[2][0]{\addstackgap[.5\dimexpr#2\relax]{\vphantom{#1}}}
 
 \newcommand{\symbsec}[1]{
     \renewcommand{\sie}[1]{\text{\gls{symb:#1:##1}}}
@@ -634,15 +639,149 @@ The robotic arm is divided in six links as shown in figure \ref{fig:arm:basestru
 The base rotational joint (\sba{j0}), which is inside the base of the robotic arm, is responsible for 360\degrs of rotation of the robotic arm around the base.  This axis of rotation is symbolised by \sba{thrust_r}.  This is to allow the robotic arm to pick the cup up from any direction parallel to its base and transport it to the user's mouth.  The radial joints (\sba{j1}, \sba{j2} and \sba{j4}) are responsible for majority of the vertical manipulation the cup in the direction symbolised by \sba{radial_r}.  The joints \sba{j1} and \sba{j2} are capable of rotating 105\degrs in both directions of their axis (shown as dashed lines in figure \ref{fig:arm:basestruct}), while the joint \sba{j4} can only rotate a maximum of 90\degrs around its axis.  The joints \sba{j3} and \sba{j5} also rotate as the base joint rotates in the \sba{thrust_r} direction, however the majority of the forces acting on the joints are radial instead of axial.  The joint \sba{j3} and \sba{j5} both can rotate 360\degrs.  
 
 \begin{figure}[h]
-    \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{Robotic_Arm_segments.pdf} 
-    \end{subfigure}
-    \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio,center]{Robotic_rotationBase.pdf} 
-    \end{subfigure}
+\centering
+    \includegraphics[width=0.9\linewidth, height=6cm,keepaspectratio, center]{Robotic_Arm_segments_Comb.pdf} 
     \caption{Robotic Arm in Segments}
     \label{fig:arm:basestruct}
 \end{figure}
+
+
+The mechanical design and manufacturing of the robotic arm can be found in section \ref{sec:rba:mech}.  This section only focuses on the kinematics of the robotic arm.  
+
+The angle of each joint of the joints of the robotic arm is calculated by using reverse kinematics.  Reverse kinematics refers to finding the position of each motor based on the desired position of the end effector (\sba{pcup}).  $P_i$ is a point in three dimensional space ($[x, y. z]$) for element $i$ in relation to \sba{porig}.  The points $P_4$ and $P_5$ are thus calculated to be perpendicular to the cup at all times, and unless required other wise, calculated to be parallel with the user as well.  This simplifies the calculation of the kinematics as the angle $\theta_{J5}$ is dedicated to keeping the cup upright.
+
+Assume a coordinate system where the x-y plane of the three dimensional space is parallel with the ground and the z-axis is perpendicular to the ground.  The angle $\theta_{J0}$ is calculated based on the desired x and y coordinates of $P_4$ as shown in equation \ref{eq:rba:angj0}.  
+
+\begin{align}
+    \theta_{J0} &= \arctan(\frac{Y_{P4}}{X_{P4}}) \label{eq:rba:angj0}
+\end{align}
+
+The angle $\varphi_{J2}$ of the joint \sba{j2} can be determined by finding the distance of $P_4$ to \sba{porig}, and using a derivation of Pythagoras' right angle theorem to find the angles inside a triangle when given the lengths of the triangle (equation \ref{eq:rba:innerAng} and figure \ref{fig:rba:triinner}).
+
+\begin{figure}[h]
+\centering
+    \includegraphics[trim={0 1.8cm 0 0}, width=0.9\linewidth, height=3cm,keepaspectratio, center]{InnerAngl.pdf} 
+    \caption{Calculation of the angles of a triangle given the side lengths.}
+    \label{fig:rba:triinner}
+\end{figure}
+
+\begin{align}
+    \theta_A &= \arccos(\frac{b^2+c^2 - a^2}{2bc}) \label{eq:rba:innerAng}
+\end{align}
+
+The angle of \sba{j2} and the coordinates of $P_2$ can be calculated by substituting the variables shown in equation \ref{eq:rba:j2calc} in equation \ref{eq:rba:innerAng}.
+
+\begin{align}
+    \begin{split}
+        A &= P_2\\
+        B &= \sie{porig}\\
+        a &= r_{S1,S2S3} = \sqrt{X_{P4}^2 + Y_{P4}^2 + Z_{P4}^2}\\
+        b &= l_{S2} + l_{S3}\\
+        c &= l_{S1}\\
+    \theta_A &= 180 - \varphi_{J2}
+    \end{split} \label{eq:rba:j2calc}
+\end{align}
+
+To calculate the angle of \sba{j1}, the angle $\theta_B$ of the system in equations \ref{fig:rba:triinner} and \ref{eq:rba:j2calc} need to be subtracted off the angle between the Z-axis and $r_{S1,S2S3}$.  The angle between the Z-axis and $r_{S1,S2S3}$ (the angle $\varphi$) can be calculated as shown in figure \ref{fig:rba:polar} and equation \ref{eq:rba:polar2cart}.
+
+
+\begin{figure}[h]
+\centering
+    \includegraphics[width=0.9\linewidth, height=5cm,keepaspectratio, center]{cartesian2polar.pdf} 
+    \caption{Polar coordinate system.}
+    \label{fig:rba:polar}
+\end{figure}
+
+\begin{align}
+    \begin{split}
+        x &=\rho \sin \varphi \cos \theta \\
+        y &=\rho \sin \varphi \sin \theta \\
+        z &=\rho \cos \varphi
+    \end{split} \label{eq:rba:polar2cart}
+\end{align}
+\begin{align}
+    \begin{split}
+        \rho^{2} &={x}^{2}+{y}^{2}+z^{2} \\
+        \theta &=\arctan\frac{{y}}{{x}} \\
+        \varphi &=\arccos \left(\frac{{z}}{\sqrt{{x}^{2}+{y}^{2}+{z}^{2}}}\right)
+    \end{split} \label{eq:rba:cart2polar}
+\end{align}
+
+Using the angles of \sba{j0} and \sba{j1} and the length of \sba{s1}, the coordinates of the point $P_2$ can be calculated using equation \ref{eq:rba:polar2cart}.  The point $P_3$ in figure \ref{fig:arm:basestruct} can then be calculated as the lengths of \sba{s2} and \sba{s3} are known.  
+
+The angle of the joint \sba{j4} can be calculated by getting the angle between the vectors of the links \sba{s3} and \sba{s4}.  When using the equation \ref{eq:rba:betwvec}, with $\varphi_{vec} = 180-\varphi_{J4}$, the vector of \sba{s3} ($\Vec{\sie{s3}}$) equals vector $\vec{a}$ and the vector of \sba{s4} ($\vec{\sie{s4}}$) equals vector $\vec{b}$.
+
+\begin{align}
+    \begin{split}
+        \vec{a} &= [x_a, y_a, z_a]\\
+        \vec{b} &= [x_b, y_b, z_b]\\
+        \rho_a &= \sqrt{x_a^2 + y_a^2 + z_a^2}\\
+        \rho_b &= \sqrt{x_b^2 + y_b^2 + z_b^2}\\
+        \varphi_{vec} &= \arccos(\frac{x_a\cdot x_b + y_a\cdot y_b + z_a\cdot z_b}{\rho_a\cdot \rho_b})\\
+        \varphi_{vec} &= \arccos(\frac{\vec{a}\odot \vec{b}}{\rho_a\cdot \rho_b})
+    \end{split} \label{eq:rba:betwvec}
+\end{align}
+
+To find $\theta_{J3}$, we first need to define the x and y-axis in the direction of $\vec{\sie{s3}}$.  Using the positions of the robotic arm shown in figure \ref{fig:arm:basestruct} and only focusing on the links \sba{s3} and \sba{s4} (as shown in figure \ref{fig:arm:s3s4}).  We can define the position of the x-axis ($x'_{S3}$) (with all motor angles set to 0\degrs) as shown in figure \ref{fig:arm:s3s4:0pos}.  In a scenario where $\theta_{J0}\neq 0$, the angles of $\theta_{J3}$ and $\varphi_{J4}$ ensure that the links \sba{s4} and \sba{s5} are parallel to the user's position.  The translated and rotated axes of $S3$ (shown in figure \ref{fig:arm:s3s4:use}) can then be used to compute $\theta_{J3}$.  At first the effects of $\theta_{J0}$ are ignored, and 
+
+
+Using equations \ref{eq:rba:polar2cart} and \ref{eq:rba:cart2polar} a system that can solve for the $\theta_{J3}$ relative to the new axes can be derived, as shown in equation \ref{eq:rba:s3s4}.
+
+\begin{align}
+    \begin{split}
+        \text{With:}&\\
+        z'_{S4} &= l_{S4}\cos(\varphi_{J4})\\
+        x'_{S4} &= l_{S4}\sin(\varphi_{J4})\cos(\theta_{J3})\\
+        y'_{S4} &= l_{S4}\sin(\varphi_{J4})\sin(\theta_{J3})\\\\
+        \text{Substituted into }&\text{equation \ref{eq:rba:cart2polar} gives:}\\
+        l_{S4}^2 &= l_{S4}^2\cdot [(\cos\varphi_{J4})^2 + (\sin\varphi_{J4})^2\cdot ((\cos\theta_{J3})^2 + (\sin\theta_{J3})^2)]\\
+        \frac{-\cos\varphi_{J4}}{\sin\varphi_{J4}} &= \sqrt{(\cos\theta_{J3})^2 + (\sin\theta_{J3})^2}\\
+        -\cot\varphi_{J4} &=
+    \end{split} \label{eq:rba:s3s4}
+\end{align}
+
+\begin{figure}[h]
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=4.5cm,keepaspectratio,center]{s3s4_zero.pdf} 
+        \caption{$x'_{S3}$ in the primary position of the robotic arm.}
+        \label{fig:arm:s3s4:0pos}
+    \end{subfigure}
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=0.9\linewidth, height=4.5cm,center,keepaspectratio]{s3s4Angls.pdf}
+        \caption{$x'_{S3}$ and $z'_{S3}$ in a use case.}
+        \label{fig:arm:s3s4:use}
+    \end{subfigure}
+    \caption{Rotated and translated 3D axes of the link \sba{s3}.}
+    \label{fig:arm:s3s4}
+\end{figure}
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Variable} & \textbf{Calculation} & \textbf{Unit} \\ \hline\xrowht[()]{20pt}
+$\theta_{J0}$      &  $\arctan(\frac{Y_{P4}}{X_{P4}})$ & degrees    \\\hline\xrowht{20pt}
+$r_{S1,S2S3}$     &  $\sqrt{X_{P4}^2 + Y_{P4}^2 + Z_{P4}^2}$   &  mm  \\ \hline\xrowht{20pt}
+$\varphi_{J2}$    &  $180 - \arccos(\frac{(l_{S2}+l_{S3})^2+l_{S1}^2 - r_{S1,S2S3}^2}{2\cdot(l_{S2}+l_{S3})\cdot l_{S1}})$    &  degrees             \\ \hline\xrowht{20pt}
+$\varphi_{r123}$     &  $\arccos(\frac{Z_{P4}}{r_{S1,S2S3}})$   &  degrees  \\ \hline\xrowht{20pt}
+$\varphi_{J1}$     &   $\varphi_{r123} - \arccos(\frac{r_{S1,S2S3}^2+l_{S1}^2 (l_{S2}+l_{S3})^2}{2\cdot r_{S1,S2S3}\cdot l_{S1}})$                   &    degrees           \\ \hline\xrowht{20pt}
+\multirow{3}{*}{\centering $P_2$}     & $X_2 = l_{S1}\sin (\varphi_{r123}) \cos (\theta_{J0})$ & \multirow{3}{*}{mm} \\\xrowht{20pt} %\cline{2-2}
+                           & $Y_2 = l_{S1}\sin (\varphi_{r123}) \sin (\theta_{J0})$ & \\ \xrowht{20pt}%\cline{2-2}
+                           & $Z_2 = l_{S1}\cos (\varphi_{r123})$ & \\\hline \xrowht{20pt}
+$\varphi_{J4}$       &  $180-\arccos(\frac{\vec{\sie{s3}}\odot \vec{\sie{s4}}}{l_{S3}\cdot l_{S4}})$                    &    degrees           \\ \hline
+\end{tabular}
+\caption{Calculation of angles and positions of variables shown in figure \ref{fig:arm:basestruct}.}
+\end{table}
+%                  &                      &               \\ \hline
+%
+%
+%
+
+\subsubsection{Calculation of Reverse Kinematics}
+
+To calculate the reverse kinematics of the robotic arm the only variable required is the desired position of the end effector relative to \sba{j1}.  This could be the cup's position or the user's mouth.  As no liquid is desired to be spilt from the cup during transport, the links \sba{s4} and \sba{s5} are set so the cup will be kept perpendicular to the ground except when being tilted for the user to drink from the cup.  The 
+
+
 
 
 
@@ -651,8 +790,15 @@ The base rotational joint (\sba{j0}), which is inside the base of the robotic ar
 
 \subsection{How each corner was calculated}
 \subsection{Calibration of potentiometers}
-\subsection{Robotic arm design and controller design}
-\subsection{Robotic arm manufacturing specifics}
+\subsection{Robotic arm design and manufacturing} \label{sec:rba:mech}
+
+As the focus of the final year project is an electronics engineering project, the mechanical design is not discussed in depth and topics such as the material selection, in depth gear and bearing design, the part-by-part assembly of the robotic arm, the in depth manufacturing methods nor the maintenance of the product.
+
+\subsubsection{Force Calculation}
+
+
+
+\subsection{Robotic arm control}
 
 \section{Cup}
 \subsection{capacitive liquid level sensing}
